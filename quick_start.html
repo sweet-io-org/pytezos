@@ -109,6 +109,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#access-storage">Access storage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#bigmap-lookup">BigMap lookup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#view-method">View method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#get-contract-balance">Get Contract Balance</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="integration_tests.html">Michelson integration tests</a></li>
@@ -857,6 +858,20 @@ PyTezos allows you to keep that address empty and get the view result:</p>
 <span class="go">  &#39;token_id&#39;: 0,</span>
 <span class="go">  &#39;nat_2&#39;: 8200000},</span>
 <span class="go"> {&#39;owner&#39;: &#39;tz2QegZQXyz8b74iTdaqKsGRF7YQb88Wu9CS&#39;, &#39;token_id&#39;: 0, &#39;nat_2&#39;: 0}]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="get-contract-balance">
+<h2>Get Contract Balance<a class="headerlink" href="#get-contract-balance" title="Permalink to this headline">¶</a></h2>
+<p>Looking for a balance for a contract involves interacting with the contract context. You can inspect the context object to see the methods, or read about it here - <a class="reference internal" href="repl.html#pytezos.context.impl.ExecutionContext" title="pytezos.context.impl.ExecutionContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">pytezos.context.impl.ExecutionContext</span></code></a></p>
+<p>The context object holds general functions for retriving data about a contract/address, including the <cite>get_balance()</cite> call.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">kolibri_oven</span> <span class="o">=</span> <span class="n">pytezos</span><span class="o">.</span><span class="n">using</span><span class="p">(</span><span class="s1">&#39;mainnet&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">contract</span><span class="p">(</span><span class="s1">&#39;KT1KH3wH4sneEevPVW7AACiVKMjhTvmXLSK6&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">kolibri_oven</span><span class="o">.</span><span class="n">context</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;get_&#39;</span><span class="p">)])</span>
+<span class="go">[&#39;get_amount&#39;, &#39;get_amount_expr&#39;, &#39;get_balance&#39;, &#39;get_balance_expr&#39;, &#39;get_big_map_diff&#39;, &#39;get_big_map_value&#39;, &#39;get_big_maps_expr&#39;, &#39;get_chain_id&#39;, &#39;get_chain_id_expr&#39;, &#39;get_code_expr&#39;, &#39;get_counter&#39;, &#39;get_counter_offset&#39;, &#39;get_dummy_address&#39;, &#39;get_dummy_chain_id&#39;, &#39;get_dummy_key_hash&#39;, &#39;get_dummy_lambda&#39;, &#39;get_dummy_public_key&#39;, &#39;get_dummy_signature&#39;, &#39;get_input_expr&#39;, &#39;get_level&#39;, &#39;get_now&#39;, &#39;get_now_expr&#39;, &#39;get_operations_ttl&#39;, &#39;get_originated_address&#39;, &#39;get_output_expr&#39;, &#39;get_parameter_expr&#39;, &#39;get_sapling_state_diff&#39;, &#39;get_self_address&#39;, &#39;get_self_expr&#39;, &#39;get_sender&#39;, &#39;get_sender_expr&#39;, &#39;get_source&#39;, &#39;get_source_expr&#39;, &#39;get_storage_expr&#39;, &#39;get_tmp_big_map_id&#39;, &#39;get_tmp_sapling_state_id&#39;, &#39;get_total_voting_power&#39;, &#39;get_voting_power&#39;]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kolibri_oven_balance</span> <span class="o">=</span> <span class="n">kolibri_oven</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">get_balance</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Kolibri oven </span><span class="si">{}</span><span class="s2"> has XTZ balance </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kolibri_oven</span><span class="o">.</span><span class="n">address</span><span class="p">,</span> <span class="n">kolibri_oven_balance</span> <span class="o">/</span> <span class="mf">1e6</span><span class="p">))</span>
+<span class="go">Kolibri oven KT1KH3wH4sneEevPVW7AACiVKMjhTvmXLSK6 has XTZ balance 191.869689</span>
 </pre></div>
 </div>
 </div>
