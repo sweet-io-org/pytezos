@@ -72,6 +72,7 @@ class ContractCall(ContextMixin):
         burn_reserve: int = DEFAULT_BURN_RESERVE,
         min_confirmations: int = 0,
         ttl: Optional[int] = None,
+        fee_multiplier: Optional[float] = None
     ) -> 'OperationGroup':
         """Fill, sign, and broadcast the transaction
 
@@ -79,9 +80,14 @@ class ContractCall(ContextMixin):
         :param burn_reserve: Add a safe reserve for dynamically calculated storage limit (default is 100).
         :param min_confirmations: number of block injections to wait for before returning (default is 0, i.e. async mode)
         :param ttl: Number of blocks to wait in the mempool before removal (default is 5 for public network, 60 for sandbox)
+        :param fee_multiplier: Multiply calculated fee by the given amount
         :return: OperationGroup with hash filled
         """
-        return self.as_transaction().send(gas_reserve=gas_reserve, burn_reserve=burn_reserve, min_confirmations=min_confirmations, ttl=ttl)
+        return self.as_transaction().send(gas_reserve=gas_reserve,
+                                          burn_reserve=burn_reserve,
+                                          min_confirmations=min_confirmations,
+                                          ttl=ttl,
+                                          fee_multiplier=fee_multiplier)
 
     def send_async(
         self,
