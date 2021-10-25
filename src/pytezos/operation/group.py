@@ -261,7 +261,7 @@ class OperationGroup(ContextMixin, ContentMixin):
                 if _fee is None:
                     _fee = calculate_fee(content, _gas_limit, extra_size)
                     if fee_multiplier:
-                        _fee *= fee_multiplier
+                        _fee = int(_fee * fee_multiplier)
 
                 current_counter = int(content['counter'])
                 content.update(
