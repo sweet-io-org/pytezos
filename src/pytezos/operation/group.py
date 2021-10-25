@@ -214,6 +214,7 @@ class OperationGroup(ContextMixin, ContentMixin):
         fee: Optional[int] = None,
         gas_limit: Optional[int] = None,
         storage_limit: Optional[int] = None,
+        fee_multiplier: Optional[float] = None,
         **kwargs,
     ) -> 'OperationGroup':
         """Fill the gaps and then simulate the operation in order to calculate fee, gas/storage limits.
@@ -227,6 +228,7 @@ class OperationGroup(ContextMixin, ContentMixin):
             operation dry-run.
         :param storage_limit: Explicitly set storage limit for operation. If not set storage limit will be calculated depending on
             results of operation dry-run.
+        :param fee_multiplier: Float value which will be multiplied with the calculated fee to determine the final fee
         :rtype: OperationGroup
         """
         if kwargs.get('branch_offset') is not None:
@@ -258,6 +260,8 @@ class OperationGroup(ContextMixin, ContentMixin):
 
                 if _fee is None:
                     _fee = calculate_fee(content, _gas_limit, extra_size)
+                    if fee_multiplier:
+                        _fee *= fee_multiplier
 
                 current_counter = int(content['counter'])
                 content.update(
@@ -325,6 +329,7 @@ class OperationGroup(ContextMixin, ContentMixin):
         burn_reserve: int = DEFAULT_BURN_RESERVE,
         min_confirmations: int = 0,
         ttl: Optional[int] = None,
+        fee_multiplier: Optional[float] = None,
     ) -> 'OperationGroup':
         """
 
@@ -332,12 +337,13 @@ class OperationGroup(ContextMixin, ContentMixin):
         :param burn_reserve: Add a safe reserve for dynamically calculated storage limit (default is 100).
         :param min_confirmations: number of block injections to wait for before returning (default is 0, i.e. async mode)
         :param ttl: Number of blocks to wait in the mempool before removal (default is 5 for public network, 60 for sandbox)
+        :param fee_multiplier: Float value which will be multiplied with the calculated fee to determine the final fee
         :return: OperationGroup with hash filled
         """
         if ttl is None:
             ttl = self.context.get_operations_ttl()
 
-        opg = self.autofill(gas_reserve=gas_reserve, burn_reserve=burn_reserve, ttl=ttl).sign()
+        opg = self.autofill(gas_reserve=gas_reserve, burn_reserve=burn_reserve, ttl=ttl, fee_multiplier=fee_multiplier).sign()
         res = opg.inject(min_confirmations=min_confirmations, num_blocks_wait=ttl)
         return opg._spawn(opg_hash=res['hash'], opg_result=res)
 
