@@ -124,7 +124,7 @@ class ExecutionContext(AbstractContext):
         key_hash = self.key.public_key_hash()
         mempool = self.shell.mempool.pending_operations()
 
-        for operations in mempool.values():
+        for operations in mempool.get('applied', []):
             for operation in operations:
                 if isinstance(operation, list):
                     operation = operation[1]
