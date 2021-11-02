@@ -124,14 +124,14 @@ class ExecutionContext(AbstractContext):
         key_hash = self.key.public_key_hash()
         mempool = self.shell.mempool.pending_operations()
 
-        for operations in mempool.get('applied', []):
-            for operation in operations:
-                if isinstance(operation, list):
-                    operation = operation[1]
-                for content in operation.get('contents', []):
-                    if content.get('source') == key_hash:
-                        logger.debug("pending transaction in mempool: %s", content)
-                        counter_offset += 1
+        for operation in mempool.get('applied', []):
+            if isinstance(operation, list):
+                operation = operation[1]
+            print(operation)
+            for content in operation.get('contents', []):
+                if content.get('source') == key_hash:
+                    logger.debug("pending transaction in mempool: %s", content)
+                    counter_offset += 1
 
         logger.debug("counter offset: %s", counter_offset)
         return counter_offset
