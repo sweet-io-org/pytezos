@@ -1,4 +1,5 @@
 from datetime import datetime
+from itertools import chain
 from typing import Optional, Tuple
 
 from pytezos.context.abstract import AbstractContext, get_originated_address  # type: ignore
@@ -124,10 +125,9 @@ class ExecutionContext(AbstractContext):
         key_hash = self.key.public_key_hash()
         mempool = self.shell.mempool.pending_operations()
 
-        for operation in mempool.get('applied', []):
+        for operation in chain(mempool.get('applied', []), mempool.get('unprocessed', [])):
             if isinstance(operation, list):
                 operation = operation[1]
-            print(operation)
             for content in operation.get('contents', []):
                 if content.get('source') == key_hash:
                     logger.debug("pending transaction in mempool: %s", content)
