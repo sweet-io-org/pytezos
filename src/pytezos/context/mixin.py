@@ -1,5 +1,5 @@
 from os.path import exists, expanduser
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from pytezos.context.impl import DEFAULT_IPFS_GATEWAY, ExecutionContext  # type: ignore
 from pytezos.crypto.encoding import is_pkh, is_public_key
@@ -8,7 +8,7 @@ from pytezos.jupyter import InlineDocstring
 from pytezos.rpc import RpcMultiNode, RpcNode, ShellQuery
 from pytezos.rpc.errors import RpcError
 
-default_network = 'granadanet'
+default_network = 'hangzhounet'
 default_key = 'edsk33N474hxzA4sKeWVM6iuGNGDpX2mGwHNxEA4UbWS8sW3Ta3NKH'  # please, use responsibly
 default_key_hash = 'tz1grSQDByRpnVs7sPtaprNZRp531ZKz6Jmm'
 
@@ -25,7 +25,8 @@ nodes = {
     'sandboxnet': ['http://127.0.0.1:8732/'],
     'localhost': ['http://127.0.0.1:8732/'],
     'florencenet': ['https://testnet-tezos.giganode.io'],
-    'granadanet': ['https://rpc.tzkt.io/granadanet']
+    'granadanet': ['https://rpc.tzkt.io/granadanet'],
+    'hangzhounet': ['https://rpc.tzkt.io/hangzhou2net'],
 }
 keys = {
     'alice': alice_key,
@@ -123,6 +124,8 @@ class ContextMixin(metaclass=InlineDocstring):
         mode: Optional[str] = None,
         script: Optional[dict] = None,
         ipfs_gateway: Optional[str] = None,
+        balance: Optional[int] = None,
+        view_results: Optional[Dict[str, Any]] = None
     ) -> ExecutionContext:
         if isinstance(shell, str):
             if shell.endswith('.pool'):
@@ -166,4 +169,6 @@ class ContextMixin(metaclass=InlineDocstring):
             script=script or self.context.script,
             mode=mode or self.context.mode,
             ipfs_gateway=ipfs_gateway,
+            balance=balance or self.context.balance,
+            view_results=view_results
         )

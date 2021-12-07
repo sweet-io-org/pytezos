@@ -1,18 +1,7 @@
 from typing import Any, Dict
 
-from pytezos.michelson.forge import (
-    forge_address,
-    forge_array,
-    forge_base58,
-    forge_bool,
-    forge_int,
-    forge_int16,
-    forge_int32,
-    forge_micheline,
-    forge_nat,
-    forge_public_key,
-    forge_script,
-)
+from pytezos.michelson.forge import (forge_address, forge_array, forge_base58, forge_bool, forge_int, forge_int16, forge_int32,
+                                     forge_micheline, forge_nat, forge_public_key, forge_script)
 from pytezos.rpc.kind import operation_tags
 
 reserved_entrypoints = {
@@ -57,6 +46,7 @@ def forge_operation(content: Dict[str, Any]) -> bytes:
         'delegation': forge_delegation,
         'endorsement': forge_endorsement,
         'endorsement_with_slot': forge_endorsement_with_slot,
+        'register_global_constant': forge_register_global_constant,
     }
     encode_proc = encode_content.get(content['kind'])
     if not encode_proc:
@@ -174,4 +164,15 @@ def forge_endorsement_with_slot(content: Dict[str, Any]) -> bytes:
 def forge_failing_noop(content: Dict[str, Any]) -> bytes:
     res = forge_nat(operation_tags[content['kind']])
     res += forge_array(content['arbitrary'].encode())
+    return res
+
+
+def forge_register_global_constant(content: Dict[str, Any]) -> bytes:
+    res = forge_nat(operation_tags[content['kind']])
+    res += forge_address(content['source'], tz_only=True)
+    res += forge_nat(int(content['fee']))
+    res += forge_nat(int(content['counter']))
+    res += forge_nat(int(content['gas_limit']))
+    res += forge_nat(int(content['storage_limit']))
+    res += forge_array(forge_micheline(content['value']))
     return res

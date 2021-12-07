@@ -106,7 +106,7 @@ class Interpreter:
             sender=sender,
             balance=balance,
             block_id=block_id,
-            script=dict(code=script),
+            script=dict(code=script, storage=storage),
             **kwargs,
         )
         stack = MichelsonStack()
@@ -127,13 +127,13 @@ class Interpreter:
             return [], None, [], stdout, e
 
     @staticmethod
-    def run_view(
+    def run_callback(
         entrypoint: str,
         parameter,
         storage,
         context: ExecutionContext,
     ) -> Tuple[Any, Any, List[str], Optional[Exception]]:
-        """Execute view of contract loaded in context
+        """Execute view entrypoint of the contract loaded into the context
 
         :param entrypoint: contract entrypoint
         :param parameter: parameter section
@@ -169,6 +169,29 @@ class Interpreter:
         except MichelsonRuntimeError as e:
             stdout.append(e.format_stdout())
             return None, None, stdout, e
+
+    @staticmethod
+    def run_view(name: str, parameter, storage, context: ExecutionContext) -> Tuple[Any, Any, Optional[Exception]]:
+        ctx = ExecutionContext(
+            shell=context.shell,
+            key=context.key,
+            block_id=context.block_id,
+            script=context.script,
+            address=context.address,
+            view_results=context.view_results,
+        )
+        stack = MichelsonStack()
+        stdout = []  # type: ignore
+        try:
+            program = MichelsonProgram.load(ctx, with_code=True)
+            res = program.instantiate_view(name=name, parameter=parameter, storage=storage)
+            res.begin(stack, stdout, context)
+            res.execute_view(stack, stdout, context)
+            ret_value = res.ret(stack, stdout)
+            return ret_value.to_python_object(), stdout, None
+        except MichelsonRuntimeError as e:
+            stdout.append(e.format_stdout())
+            return None, stdout, e
 
     @staticmethod
     def run_tzt(
