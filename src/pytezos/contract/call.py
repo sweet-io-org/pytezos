@@ -1,6 +1,6 @@
 from decimal import Decimal
 from pprint import pformat
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from deprecation import deprecated  # type: ignore
 
@@ -149,6 +149,7 @@ class ContractCall(ContextMixin):
         level=None,
         now=None,
         self_address=None,
+        view_results: Optional[Dict[str, Any]] = None,
     ) -> ContractCallResult:
         """Run code in the builtin REPL (WARNING! Not recommended for critical tasks).
 
@@ -161,6 +162,7 @@ class ContractCall(ContextMixin):
         :param level: patch LEVEL
         :param now: patch NOW
         :param self_address: patch SELF/SELF_ADDRESS
+        :param view_results: patch VIEW calls (keys must be string "address%view", values => Python objects)
         :rtype: pytezos.contract.result.ContractCallResult
         """
         storage_ty = StorageSection.match(self.context.storage_expr)
@@ -182,6 +184,7 @@ class ContractCall(ContextMixin):
             level=level,
             now=now,
             address=self_address,
+            view_results=view_results,
         )
         if error:
             logger.debug('\n'.join(stdout))
@@ -264,22 +267,6 @@ class ContractCall(ContextMixin):
             return self.run_code(storage=storage, source=source, sender=sender, gas_limit=gas_limit)
         return self.run_operation()
 
-    def storage_view(self):
-        """Get return value of an off-chain storage view.
-
-        :returns: Decoded parameters of a callback
-        """
-        _, storage, stdout, error = Interpreter.run_view(
-            parameter=self.parameters['value'],
-            entrypoint=self.parameters['entrypoint'],
-            storage={'prim': 'None'},
-            context=self.context,
-        )
-        if error:
-            logger.debug('\n'.join(stdout))
-            raise error
-        return storage  # type: ignore
-
     def callback_view(self):
         """Get return value of an on-chain callback method.
 
@@ -291,7 +278,7 @@ class ContractCall(ContextMixin):
             storage_ty = StorageSection.match(self.context.storage_expr)
             initial_storage = storage_ty.dummy(self.context).to_micheline_value(lazy_diff=True)
 
-        operations, _, stdout, error = Interpreter.run_view(
+        operations, _, stdout, error = Interpreter.run_callback(
             parameter=self.parameters['value'],
             entrypoint=self.parameters['entrypoint'],
             storage=initial_storage,
