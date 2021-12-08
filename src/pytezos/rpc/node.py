@@ -91,6 +91,7 @@ class RpcNode:
         :returns: node response
         """
         logger.debug('>>>>> %s %s\n%s', method, path, json.dumps(kwargs, indent=4))
+        logger.info('node.request %s %s %s', method, _urljoin(self.uri[0], path), kwargs)
         res = requests.request(
             method=method,
             url=_urljoin(self.uri[0], path),
