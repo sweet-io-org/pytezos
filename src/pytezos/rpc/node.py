@@ -104,6 +104,9 @@ class RpcNode:
             },
             **kwargs,
         )
+        if res.status_code == 401:
+            logger.debug('<<<<< %s\n%s', res.status_code, res.text)
+            raise RpcError(f'Unauthorized: {path}')
         if res.status_code == 404:
             logger.debug('<<<<< %s\n%s', res.status_code, res.text)
             raise RpcError(f'Not found: {path}')
