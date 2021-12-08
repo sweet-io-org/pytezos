@@ -95,7 +95,6 @@ class RpcNode:
         :returns: node response
         """
         logger.debug('>>>>> %s %s\n%s', method, path, json.dumps(kwargs, indent=4))
-        logger.info('node.request %s %s %s', method, _urljoin(self.uri[0], path), kwargs)
         res = requests.request(
             method=method,
             url=_urljoin(self.uri[0], path),
@@ -105,9 +104,6 @@ class RpcNode:
             },
             **kwargs,
         )
-        if 'run_operation' in path:
-            # some targeted debugging
-            logger.info("run_operation status %s response: %s", res.status_code, res.text)
         if res.status_code == 404:
             logger.debug('<<<<< %s\n%s', res.status_code, res.text)
             raise RpcError(f'Not found: {path}')
