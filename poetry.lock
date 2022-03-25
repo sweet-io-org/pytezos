@@ -187,7 +187,7 @@ python-versions = ">=3.7,<4.0"
 cattrs = ">=1.0.0,<2.0.0"
 dateutils = ">=0.6.12,<0.7.0"
 pytimeparse = ">=1.1.8,<2.0.0"
-typing-extensions = ">=3.7.4,<4.0.0"
+typing-extensions = ">=3.7.4"
 typing-inspect = ">=0.6.0,<0.7.0"
 
 [package.extras]
