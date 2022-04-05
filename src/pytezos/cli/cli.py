@@ -1,4 +1,4 @@
-import atexit
+import logging
 import io
 import sys
 import tarfile
@@ -10,9 +10,9 @@ from typing import List, Optional
 
 import click
 import docker  # type: ignore
-import requests
 from testcontainers.core.generic import DockerContainer  # type: ignore
 
+from pytezos.logging import DEFAULT_LOGGING_CONFIG
 from pytezos import ContractInterface, __version__, pytezos
 from pytezos.cli.github import create_deployment, create_deployment_status
 from pytezos.context.mixin import default_network  # type: ignore
@@ -20,8 +20,8 @@ from pytezos.logging import logger
 from pytezos.michelson.types.base import generate_pydoc
 from pytezos.operation.result import OperationResult
 from pytezos.rpc.errors import RpcError
-from pytezos.sandbox.node import DOCKER_IMAGE
-from pytezos.sandbox.parameters import EDO, FLORENCE, HANGZHOU
+from pytezos.sandbox.node import DOCKER_IMAGE, TEZOS_NODE_PORT, SandboxedNodeContainer, get_next_baker_key
+from pytezos.sandbox.parameters import EDO, FLORENCE, HANGZHOU, ITHACA
 
 kernel_js_path = join(dirname(dirname(__file__)), 'assets', 'kernel.js')
 kernel_json = {
@@ -321,8 +321,8 @@ def smartpy_compile(
 
 @cli.command(help='Run containerized sandbox node')
 @click.option('--image', type=str, help='Docker image to use', default=DOCKER_IMAGE)
-@click.option('--protocol', type=click.Choice(['edo', 'florence', 'hangzhou']), help='Protocol to use', default='hangzhou')
-@click.option('--port', '-p', type=int, help='Port to expose', default=8732)
+@click.option('--protocol', type=click.Choice(['hangzhou', 'ithaca']), help='Protocol to use', default='ithaca')
+@click.option('--port', '-p', type=int, help='Port to expose', default=TEZOS_NODE_PORT)
 @click.option('--interval', '-i', type=float, help='Interval between baked blocks (in seconds)', default=1.0)
 @click.option('--blocks', '-b', type=int, help='Number of blocks to bake before exit')
 @click.pass_context
@@ -335,46 +335,29 @@ def sandbox(
     blocks: int,
 ):
     protocol_hash = {
-        'edo': EDO,
-        'florence': FLORENCE,
         'hangzhou': HANGZHOU,
+        'ithaca': ITHACA
     }[protocol]
 
-    container = DockerContainer(image)
-    if port:
-        container.ports[8732] = port
+    with SandboxedNodeContainer(image=image, port=port) as node:
+        if not node.wait_for_connection():
+            raise TimeoutError('Failed to connect to the sandboxed node')
 
-    container.start()
-    atexit.register(container.stop)
+        logger.info('Activating protocol %s...', protocol_hash)
+        node.activate(protocol_hash)
 
-    container_id = container.get_wrapped_container().id
-    host = container.get_docker_client().bridge_ip(container_id)
-    client = pytezos.using(key='bootstrap1', shell=f'http://{host}:8732')
-
-    while True:
-        try:
-            client.shell.node.get("/version/")
-            break
-        except requests.exceptions.ConnectionError:
-            time.sleep(0.1)
-
-    logger.info('Activating protocol %s...', protocol_hash)
-    client.using(key='dictator').activate_protocol(protocol_hash).fill().sign().inject()
-
-    blocks_baked = 0
-    while True:
-        try:
-            logger.info('Baking block %s...', blocks_baked)
-            block_hash = client.bake_block().fill().work().sign().inject()
-            logger.info('Baked block: %s', block_hash)
-            blocks_baked += 1
-
-            if blocks and blocks_baked == blocks:
+        blocks_baked = 0
+        while True:
+            try:
+                logger.info('Baking block %s...', blocks_baked)
+                block_hash = node.bake(key=get_next_baker_key(node.client))
+                logger.info('Baked block: %s', block_hash)
+                blocks_baked += 1
+                if blocks and blocks_baked == blocks:
+                    break
+                time.sleep(interval)
+            except KeyboardInterrupt:
                 break
-
-            time.sleep(interval)
-        except KeyboardInterrupt:
-            break
 
 
 @cli.command(help='Update Ligo compiler (docker pull ligolang/ligo)')
@@ -510,4 +493,6 @@ def ligo_invoke_contract(
 
 
 if __name__ == '__main__':
+    if not logging.getLogger().hasHandlers():
+        logging.config.dictConfig(DEFAULT_LOGGING_CONFIG)
     cli(prog_name='pytezos')
