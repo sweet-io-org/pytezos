@@ -1,5 +1,82 @@
 # Changelog
 
+## 3.4.2 - 2022-03-26
+
+### Fixed
+
+* time_between_blocks no longer exists, minimum_block_delay used instead
+* sandbox tests -> re-create node container per each case (cannot rollback in Tenderbake)
+* REPL: `CREATE_CONTRACT` is now able to originate contracts with views (by @konchunas)
+
+### Added
+
+* `SUB_MUTEZ` instruction support in REPL
+* Implementations of `Operation_list_hash`, `Operation_list_list_hash`, and `Block_payload_hash`
+
+## 3.4.1 - 2022-03-22
+
+### Fixed
+
+* Issue with `lazy_storage_diff`
+
+## 3.4.0 - 2022-03-22
+
+### Fixed
+
+* `run_code` does not merge lazy storage diffs correctly
+
+### Changed
+
+* Default protocol is Ithaca
+* Sandbox node version is updated to v12
+
+## 3.3.6 - 2022-03-10
+
+### Fixed
+
+* Logging configuration is not overwritten by pytezos
+
+### Added
+
+* Installation hints for M1 (credits to @konchunas)
+
+## 3.3.5 - 2022-02-28
+
+### Fixed
+
+* Metadata big map can be located in a nested structure, not necessarily on the top-level (as per TZIP-16)
+
+## 3.3.4 - 2021-12-23
+
+### Fixed
+
+* New testnet faucet is handled properly (the json format has slightly changed)
+* Incorrect wrapping of static methods while injecting jupyter docs (py3.10)
+* Unable to call intermediate entrypoints from the contract interfaceE
+* Sandboxed node wasn't exposed at localhost causing connection issues on MacOS and Windows
+* Big map key of nested or/pair type wasn't handled correctly
+
+### Changed
+
+* `Key.verify` returns `True` if the signature is valid (it was `None` before)
+
+## 3.3.3 - 2021-12-14
+
+### Fixed
+
+* Always try to fetch the latest storage in off-chain or on-chain views
+* Fixed case with `GET` instruction returning `None` with wrong type (key type instead of value type)
+
+## 3.3.2 - 2021-12-12
+
+### Added
+
+* explicit handling of the 401 to return a more meaningful response [@kaellis]
+
+### Fixed
+
+* Regression in offline view behavior for storage with bigmaps
+
 ## 3.3.1 - 2021-12-01
 
 ### Added
