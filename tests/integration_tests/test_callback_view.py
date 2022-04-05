@@ -1,11 +1,10 @@
-from unittest import TestCase, skip
+from unittest import TestCase
 
 from pytezos import pytezos
 
 
 class CallbackViewTestCase(TestCase):
 
-    @skip
     def test_balance_of(self):
         usds = pytezos.using('mainnet').contract('KT1REEb5VxWRjcHm5GzDMwErMmNFftsE5Gpf')
         res = usds.balance_of(requests=[

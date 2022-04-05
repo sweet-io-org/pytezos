@@ -180,6 +180,22 @@ class SubInstruction(MichelsonInstruction, prim='SUB'):
         return cls(stack_items_added=1)
 
 
+class SubMutezInstruction(MichelsonInstruction, prim='SUB_MUTEZ'):
+
+    @classmethod
+    def execute(cls, stack: MichelsonStack, stdout: List[str], context: AbstractContext):
+        a, b = cast(Tuple[MutezType, MutezType], stack.pop2())
+        a.assert_type_equal(MutezType)
+        b.assert_type_equal(MutezType)
+        try:
+            res = OptionType.from_some(MutezType.from_value(int(a) - int(b)))
+        except OverflowError:
+            res = OptionType.none(MutezType)
+        stack.push(res)
+        stdout.append(format_stdout(cls.prim, [a, b], [res]))  # type: ignore
+        return cls(stack_items_added=1)
+
+
 class IntInstruction(MichelsonInstruction, prim='INT'):
 
     @classmethod

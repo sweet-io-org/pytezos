@@ -290,7 +290,7 @@ class Key(metaclass=InlineDocstring):
 
     @classmethod
     def from_faucet(cls, source: Union[str, dict]) -> 'Key':
-        """Import key from a faucet file: https://faucet.tzalpha.net/
+        """Import key from a faucet file: https://teztnets.xyz/
 
         :param source: path to the json file
         :rtype: Key
@@ -307,7 +307,7 @@ class Key(metaclass=InlineDocstring):
             mnemonic=data['mnemonic'],
             passphrase=data.get('password', ''),
             email=data.get('email', ''),
-            activation_code=data['secret']
+            activation_code=data['activation_code']
         )
         if key.public_key_hash() != data['pkh']:
             raise ValueError('Failed to import')
@@ -449,12 +449,13 @@ class Key(metaclass=InlineDocstring):
 
         return base58_encode(signature, prefix).decode()
 
-    def verify(self, signature: Union[str, bytes], message: Union[str, bytes]) -> None:
+    def verify(self, signature: Union[str, bytes], message: Union[str, bytes]) -> bool:
         """Verify signature, raise exception if it is not valid.
 
         :param message: sequance of bytes, raw format or hexadecimal notation
         :param signature: a signature in base58 encoding
         :raises: ValueError if signature is not valid
+        :returns: True if signature is valid
         """
         encoded_signature = scrub_input(signature)
         encoded_message = scrub_input(message)
@@ -489,3 +490,5 @@ class Key(metaclass=InlineDocstring):
                 raise ValueError('Signature is invalid.')
         else:
             raise Exception(f'Unknown elliptic curve {self.curve}')  # type: ignore
+
+        return True

@@ -45,7 +45,7 @@ You need to install cryptographic packages before installing the library/buildin
 
 ##### Ubuntu, Debian and other apt-based distributions
 ```shell
-$ sudo apt install libsodium-dev libsecp256k1-dev libgmp-dev
+$ sudo apt install libsodium-dev libsecp256k1-dev libgmp-dev pkg-config
 ```
 
 ##### Arch Linux
@@ -57,7 +57,19 @@ $ sudo pacman -Syu --needed libsodium libsecp256k1 gmp
 [Homebrew](https://brew.sh/) needs to be installed.
 ```shell
 $ brew tap cuber/homebrew-libsecp256k1
-$ brew install libsodium libsecp256k1 gmp
+$ brew install libsodium libsecp256k1 gmp pkg-config
+```
+
+##### M1 (ARM)
+
+In case `secp256k1` or `gmp` cannot find either include or lib paths, try explicitly set environment vars:
+```
+CFLAGS="-I/opt/homebrew/Cellar/gmp/6.2.1_1/include/ -L/opt/homebrew/Cellar/gmp/6.2.1_1/lib/" LIB_DIR="/opt/homebrew/Cellar/libsecp256k1/0.1/lib" INCLUDE_DIR=/opt/homebrew/Cellar/libsecp256k1/0.1/include pip3 install --user pytezos
+```
+
+For running tests you might also need to export `LD_LIBRARY_PATH`:
+```
+export LD_LIBRARY_PATH=/opt/homebrew/lib/
 ```
 
 #### Windows
@@ -74,10 +86,9 @@ but if you feel lucky you can try to install natively:
 ### From PyPi
 
 ```shell
-$ pip install wheel setuptools
+$ pip install wheel setuptools pkginfo cryptography
 $ pip install pytezos
 ```
-
 
 ### [Google Colab](https://colab.research.google.com)
 

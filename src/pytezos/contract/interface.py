@@ -27,6 +27,7 @@ from pytezos.michelson.parse import michelson_to_micheline
 from pytezos.michelson.program import MichelsonProgram
 from pytezos.michelson.sections import ViewSection
 from pytezos.michelson.types.base import generate_pydoc
+from pytezos.michelson.types import BigMapType, BytesType
 from pytezos.operation.group import OperationGroup
 from pytezos.rpc import ShellQuery
 
@@ -160,7 +161,7 @@ class ContractInterface(ContextMixin):
     @classmethod
     @deprecated(
         deprecated_in='3.0.0',
-        removed_in='3.1.0',
+        removed_in='4.0.0',
         details='use one of `from_file`, `from_michelson`, `from_micheline`, `from_url`',
     )
     def create_from(cls, source):
@@ -197,7 +198,7 @@ class ContractInterface(ContextMixin):
         with open(path, 'w+') as f:
             f.write(self.to_michelson())
 
-    @deprecated(deprecated_in='3.0.0', removed_in='3.1.0', details='use `.storage[path][to][big_map][key]()` instead')
+    @deprecated(deprecated_in='3.0.0', removed_in='4.0.0', details='use `.storage[path][to][big_map][key]()` instead')
     def big_map_get(self, path):
         """Get BigMap entry as Python object by plain key and block height.
 
@@ -402,10 +403,19 @@ class ContractInterface(ContextMixin):
     @cached_property
     def metadata_url(self) -> Optional[str]:
         try:
-            return self.storage['metadata']['']().decode()
+            metadata = self.storage.data.find(lambda x: x.field_name == 'metadata' and isinstance(x, BigMapType))
+            if metadata is not None:
+                metadata_url = metadata['']
+                if isinstance(metadata_url, BytesType):
+                    return metadata_url.value.decode()
+                else:
+                    self._logger.info('Empty string key is not found in metadata big map')
+            else:
+                self._logger.info('Metadata big map not found')
         # FIXME: Dirty
         except (KeyError, AssertionError):
-            return None
+            self._logger.info('Failed to get metadata URI')
+        return None
 
     @property
     def parameter(self) -> ContractEntrypoint:
@@ -414,22 +424,22 @@ class ContractInterface(ContextMixin):
         return getattr(self, root_name)
 
     @property  # type: ignore
-    @deprecated(deprecated_in='3.0.0', removed_in='3.1.0', details='access `ContractInterface` directly')
+    @deprecated(deprecated_in='3.0.0', removed_in='4.0.0', details='access `ContractInterface` directly')
     def contract(self) -> 'ContractInterface':
         return self
 
     @property  # type: ignore
-    @deprecated(deprecated_in='3.0.0', removed_in='3.1.0', details='use `to_michelson()` instead')
+    @deprecated(deprecated_in='3.0.0', removed_in='4.0.0', details='use `to_michelson()` instead')
     def text(self) -> str:
         return self.to_michelson()
 
     @property  # type: ignore
-    @deprecated(deprecated_in='3.0.0', removed_in='3.1.0', details='use `to_micheline()` instead')
+    @deprecated(deprecated_in='3.0.0', removed_in='4.0.0', details='use `to_micheline()` instead')
     def code(self):
         return self.to_micheline()
 
     @property  # type: ignore
-    @deprecated(deprecated_in='3.0.0', removed_in='3.1.0', details='use `default()` instead')
+    @deprecated(deprecated_in='3.0.0', removed_in='4.0.0', details='use `default()` instead')
     def call(self) -> ContractEntrypoint:
         return self.parameter
 
@@ -480,6 +490,6 @@ class ContractInterface(ContextMixin):
         )
 
 
-@deprecated(deprecated_in='3.0.0', removed_in='3.1.0', details='use `ContractInterface` instead')
+@deprecated(deprecated_in='3.0.0', removed_in='4.0.0', details='use `ContractInterface` instead')
 class Contract(ContractInterface):
     pass
