@@ -1,15 +1,16 @@
 import json
 import re
+from contextlib import suppress
 from os.path import dirname, join
 from typing import Any, Dict, List, Optional, Union
 
 import requests  # type: ignore
 from attr import dataclass
-from cattrs_extras.converter import Converter, suppress  # type: ignore
 from jsonschema import validate as jsonschema_validate  # type: ignore
 
 from pytezos.context.impl import ExecutionContext
 from pytezos.context.mixin import ContextMixin
+from pytezos.contract import converter
 from pytezos.contract.view import ContractView
 
 
@@ -163,7 +164,7 @@ class ContractMetadata(ContextMixin):
         """Convert metadata from JSON object"""
         metadata_json = cls.fix_metadata_json(metadata_json)
         cls.validate_metadata_json(metadata_json)
-        res = Converter().structure(metadata_json, ContractMetadata)
+        res = converter.structure(metadata_json, ContractMetadata)
         res.context = context if context else ExecutionContext()
         res.raw = metadata_json
         return res

@@ -23,7 +23,7 @@ update:
 
 install:
 	git submodule update --init  || true
-	poetry install --remove-untracked `if [ "${DEV}" = "0" ]; then echo "--no-dev"; fi`
+	poetry install `if [ "${DEV}" = "0" ]; then echo "--no-dev"; fi`
 
 install-kernel:
 	poetry run python -m michelson_kernel install
@@ -66,10 +66,7 @@ mypy:
 lint: isort black pylint mypy
 
 test:
-	poetry run nosetests --with-coverage tests --cover-package pytezos --cover-package michelson_kernel --cover-xml-file coverage.xml
-
-test-verbose:
-	poetry run nosetests -v --with-timer --with-coverage tests --cover-package pytezos --cover-package michelson_kernel --cover-xml-file coverage.xml
+	poetry run pytest --cov-report=term-missing --cov=pytezos --cov=michelson_kernel --cov-report=xml tests
 
 cover:
 	poetry run diff-cover coverage.xml

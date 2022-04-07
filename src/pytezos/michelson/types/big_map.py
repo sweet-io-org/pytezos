@@ -1,13 +1,6 @@
 from copy import copy, deepcopy
-from typing import (
-    Callable,
-    Generator,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Callable, Generator, List, Optional, Tuple, Type, Union
+
 from pytezos.context.abstract import AbstractContext  # type: ignore
 from pytezos.michelson.forge import forge_script_expr
 from pytezos.michelson.micheline import Micheline, MichelineLiteral, MichelineSequence, parse_micheline_literal
@@ -185,8 +178,8 @@ class BigMapType(MapType, prim='big_map', args_len=2):
         }
         if action == 'alloc':
             key_type, val_type = [arg.as_micheline_expr() for arg in self.args]
-            diff['key_type'] = key_type
-            diff['value_type'] = val_type
+            diff['key_type'] = key_type  # type: ignore
+            diff['value_type'] = val_type  # type: ignore
         elif action == 'copy':
             pass  # TODO:
 
