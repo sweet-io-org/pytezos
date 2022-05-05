@@ -1,8 +1,21 @@
 # Changelog
 
-## 3.4.2 - 2022-03-26
+## [3.5.0](https://github.com/baking-bad/pytezos/compare/3.4.2...3.5.0) (2022-04-29)
 
 ### Fixed
+
+* Wait helper edge case: operations can be both included in chain and present in mempool
+* Batch operation build was accompanied by many useless RPC requests
+* `minimal_block_delay` constant might be absent, defaults to 0 (by @jpic)
+
+### Changed
+
+* Minimum Python version is now 3.8, Python 3.10 support is added
+* `ReorgError` is now thrown while waiting for operation confirmation instead of `StopIteration` in case of a chain reorg.
+
+## 3.4.2 - 2022-03-26
+
+### Fixed`
 
 * time_between_blocks no longer exists, minimum_block_delay used instead
 * sandbox tests -> re-create node container per each case (cannot rollback in Tenderbake)

@@ -11,6 +11,7 @@ from deprecation import deprecated  # type: ignore
 from pytezos.crypto.encoding import base58_decode
 from pytezos.jupyter import get_attr_docstring
 from pytezos.logging import logger
+from pytezos.rpc.errors import ReorgError
 from pytezos.rpc.kind import validation_passes
 from pytezos.rpc.protocol import BlockQuery, BlocksQuery
 from pytezos.rpc.query import RpcQuery
@@ -66,7 +67,6 @@ class ShellQuery(RpcQuery, path=''):
         self,
         current_block_hash: str,
         max_blocks: int = 1,
-        max_priority: int = 2,
         yield_current=False,
         time_between_blocks: Optional[int] = None,
         block_timeout: Optional[int] = None,
@@ -75,7 +75,6 @@ class ShellQuery(RpcQuery, path=''):
 
         :param current_block_hash: hash of the current block (head)
         :param max_blocks: number of blocks to iterate (not including the current one)
-        :param max_priority: wait for blocks with lower priority (increased timeout)
         :param yield_current: yield current block hash at the very beginning
         :param time_between_blocks: override protocol constant
         :param block_timeout: set block timeout (by default Pytezos will wait for a long time)
@@ -96,7 +95,7 @@ class ShellQuery(RpcQuery, path=''):
         for _ in range(max_blocks):
             header = self.blocks[current_block_hash].header()
             if prev_block_hash and prev_block_hash != header['predecessor']:
-                raise StopIteration('Reorg detected, expected predecessor %s instead of %s', prev_block_hash, header['predecessor'])
+                raise ReorgError(header['level'], prev_block_hash, header['predecessor'])
 
             prev_block_dt = datetime.strptime(header['timestamp'], '%Y-%m-%dT%H:%M:%SZ')
             elapsed_sec = (datetime.utcnow() - prev_block_dt).seconds
@@ -168,14 +167,15 @@ class ShellQuery(RpcQuery, path=''):
                             logger.info('Operation %s has left mempool', opg_hash)
                             pending.remove(opg_hash)
 
-            if len(pending) < len(opg_hashes):
-                included = self.blocks[block_hash].operation_hashes()
-                for i, vp in enumerate(included):
-                    for j, opg_hash in enumerate(vp):
-                        if opg_hash in opg_hashes and opg_hash not in confirmations:
-                            logger.info('Operation %s has been included to block %s', opg_hash, block_hash)
-                            confirmations[opg_hash] = 0  # initialize
-                            operations.append(self.blocks[block_hash].operations[i][j]())
+            included = self.blocks[block_hash].operation_hashes()
+            for i, vp in enumerate(included):
+                for j, opg_hash in enumerate(vp):
+                    if opg_hash in opg_hashes and opg_hash not in confirmations:
+                        logger.info('Operation %s has been included to block %s', opg_hash, block_hash)
+                        if opg_hash in pending:  # can be still in the particular node's mempool (not yet removed)
+                            pending.remove(opg_hash)
+                        confirmations[opg_hash] = 0  # initialize
+                        operations.append(self.blocks[block_hash].operations[i][j]())
 
             for opg_hash in confirmations:
                 confirmations[opg_hash] += 1
