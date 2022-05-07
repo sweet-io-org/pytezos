@@ -111,7 +111,7 @@ $ docker-compose up -d notebook
 ### Building from sources
 
 Requirements:
-* Python 3.7+
+* Python 3.8+
 * [Poetry](https://python-poetry.org/docs/#installation)
 * libsodium, libsecp256k1, gmp
 * make
