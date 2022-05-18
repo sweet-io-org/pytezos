@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.5.1](https://github.com/baking-bad/pytezos/compare/3.5.0...3.5.1) (2022-05-18)
+
+### Fixed
+
+* Unforging for `pair` with 3 args and annots was working incorrectly (@konchunas)
+
 ## [3.5.0](https://github.com/baking-bad/pytezos/compare/3.4.2...3.5.0) (2022-04-29)
 
 ### Fixed
