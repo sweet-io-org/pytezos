@@ -94,10 +94,12 @@ class BlockHeader(ContextMixin):
         # NOTE: Real values will be set during fill
         protocol_data = {
             "proof_of_work_nonce": "0000000000000000",
-            "liquidity_baking_escape_vote": False,
             "payload_hash": "vh1g87ZG6scSYxKhspAUzprQVuLAyoa5qMBKcUfjgnQGnFb3dJcG",  # dummy payload (zeroes)
             "payload_round": 0,
+            "liquidity_baking_toggle_vote": "off"
+
         }
+
         return BlockHeader(
             context=context,
             operations=operations,
@@ -135,7 +137,7 @@ class BlockHeader(ContextMixin):
             **self.protocol_data,
         }
 
-        if level % int(sandbox_params['blocks_per_commitment']) == 0:  # type: ignore
+        if level % int(sandbox_params['blocks_per_commitment']) == 0:
             protocol_data['seed_nonce_hash'] = base58_encode(b'\x00' * 32, b'nce').decode()
 
         operations = [

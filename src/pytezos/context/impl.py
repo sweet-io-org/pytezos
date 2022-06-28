@@ -18,7 +18,7 @@ DEFAULT_IPFS_GATEWAY = 'https://ipfs.io/ipfs'
 class ExecutionContext(AbstractContext):
 
     def __init__(self, amount=None, chain_id=None, protocol=None, source=None, sender=None, balance=None,
-                 block_id=None, now=None, level=None, voting_power=None, total_voting_power=None,
+                 block_id=None, now=None, level=None, voting_power=None, total_voting_power=None, min_block_time=None,
                  key=None, shell=None, address=None, counter=None, script=None, tzt=False, mode=None, ipfs_gateway=None,
                  global_constants=None, view_results=None):
         self.key: Optional[Key] = key
@@ -37,6 +37,7 @@ class ExecutionContext(AbstractContext):
         self.protocol = protocol
         self.voting_power = voting_power
         self.total_voting_power = total_voting_power
+        self.min_block_time = min_block_time
         self.tzt = tzt
         self.parameter_expr = get_script_section(script, name='parameter') if script and not tzt else None
         self.storage_expr = get_script_section(script,  name='storage') if script and not tzt else None
@@ -366,6 +367,15 @@ class ExecutionContext(AbstractContext):
         else:
             return 0
 
+    def get_min_block_time(self) -> int:
+        if self.min_block_time:
+            return self.min_block_time
+        elif self.shell:
+            constants = self.shell.head.context.constants()
+            return int(constants['minimal_block_delay'])
+        else:
+            return 1
+
     def get_chain_id(self) -> str:
         if self.chain_id:
             return self.chain_id
@@ -387,6 +397,12 @@ class ExecutionContext(AbstractContext):
             return self.key.public_key_hash()
         else:
             return base58_encode(b'\x00' * 20, b'KT1').decode()
+
+    def get_dummy_txr_address(self) -> str:
+        if self.key:
+            return self.key.public_key_hash()
+        else:
+            return base58_encode(b'\x00' * 20, b'txr1').decode()
 
     def get_dummy_public_key(self) -> str:
         if self.key:

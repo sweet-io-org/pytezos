@@ -44,8 +44,8 @@ class undefined:
 Undefined = undefined()
 
 
-def parse_name(annots: List[str], prefix: str) -> Optional[str]:
-    if annots is None:
+def parse_name(annots: Optional[List[str]], prefix: str) -> Optional[str]:
+    if not annots:
         return None
     sub_annots = [x[1:] for x in annots if x.startswith(prefix)]
     assert len(sub_annots) <= 1, f'multiple "{prefix}" annotations are not allowed: {sub_annots}'
@@ -109,7 +109,7 @@ class MichelsonType(Micheline):
     @classmethod
     def generate_pydoc(cls, definitions: List[Tuple[str, str]], inferred_name=None, comparable=False) -> str:
         assert len(cls.args) == 0 \
-            or cls.prim in ['contract', 'lambda', 'ticket', 'sapling_state', 'sapling_transaction'], \
+            or cls.prim in ['contract', 'lambda', 'ticket', 'sapling_state', 'sapling_transaction', 'sapling_transaction_deprecated'], \
             'defined for simple types only'
         if cls.prim in type_mappings:
             if all(x != cls.prim for x, _ in definitions):
@@ -118,7 +118,7 @@ class MichelsonType(Micheline):
 
     @classmethod
     def is_comparable(cls):
-        if cls.prim in ['bls12_381_fr', 'bls12_381_g1', 'bls12_381_g2', 'sapling_state', 'sapling_transaction',
+        if cls.prim in ['bls12_381_fr', 'bls12_381_g1', 'bls12_381_g2', 'sapling_state', 'sapling_transaction', 'sapling_transaction_deprecated',
                         'big_map', 'contract', 'lambda', 'list', 'map', 'set', 'operation', 'ticket']:
             return False
         return all(map(lambda x: x.is_comparable(), cls.args))

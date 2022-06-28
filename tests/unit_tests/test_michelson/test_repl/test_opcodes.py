@@ -1,6 +1,7 @@
 from unittest import TestCase
 from os.path import dirname, join
 from parameterized import parameterized
+from pytezos import MichelsonRuntimeError
 
 from pytezos.michelson.repl import Interpreter
 from pytezos.michelson.parse import michelson_to_micheline
@@ -12,6 +13,7 @@ KEY_HASH = 'tz1grSQDByRpnVs7sPtaprNZRp531ZKz6Jmm'
 BALANCE = 4000000000000
 VOTING_POWER = 500
 TOTAL_VOTING_POWER = 2500
+MIN_BLOCK_TIME = 60000
 
 # The verifying key, proof, and inputs are generated from
 # ZoKrates, modified to use BLS12-381.
@@ -946,6 +948,13 @@ class OpcodesTestCase(TestCase):
             'Unit',
             '(Some "KT1Mjjcb6tmSsLm7Cb3DSQszePjfchPM4Uxm")',
         ),
+        # Test create_contract_rootname_alt
+        (
+            'create_contract_rootname_alt.tz',
+            'None',
+            'Unit',
+            '(Some "KT1Mjjcb6tmSsLm7Cb3DSQszePjfchPM4Uxm")',
+        ),
         # Test multiplication - success case (no overflow)
         # Failure case is tested in m̀ul_overflow.tz
         ('mul.tz', 'Unit', 'Unit', 'Unit'),
@@ -1008,6 +1017,13 @@ class OpcodesTestCase(TestCase):
             f'"{PUBLIC_KEY}"',
             '(Pair 500 2500)',
         ),
+        # Test MIN_BLOCK_TIME
+        (
+            'min_block_time.tz',
+            '0',
+            'Unit',
+            f'{MIN_BLOCK_TIME}',
+        ),
         # Test KECCAK
         (
             'keccak.tz',
@@ -1068,7 +1084,14 @@ class OpcodesTestCase(TestCase):
             f'(Pair "{SIGNATURE}" "hello")',
             '"edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav"',
             f'(Pair "{SIGNATURE}" "hello")'
-        )
+        ),
+        # Test view with SET_DELEGATE in lambda (forbidden otherwise)
+        (
+            'view_op_set_delegate_lambda.tz',
+            'Unit',
+            'Unit',
+            'Unit',
+        ),
     ])
     def test_opcodes(self, filename, storage, parameter, result):
         with open(join(dirname(__file__), 'opcodes', filename)) as f:
@@ -1081,7 +1104,8 @@ class OpcodesTestCase(TestCase):
             balance=BALANCE,
             chain_id=CHAIN_ID,
             total_voting_power=TOTAL_VOTING_POWER,
-            voting_power={KEY_HASH: VOTING_POWER}
+            voting_power={KEY_HASH: VOTING_POWER},
+            min_block_time=MIN_BLOCK_TIME,
         )
         if error:
             print('\n'.join(stdout))
@@ -1539,34 +1563,72 @@ class OpcodesTestCase(TestCase):
         self.assertEqual(michelson_to_micheline(result), storage)
 
     @parameterized.expand([
-        ('shifts.tz', 'None', '(Left (Pair 1 257))'),
-        ('shifts.tz', 'None', '(Left (Pair 123 257))'),
-        ('shifts.tz', 'None', '(Right (Pair 1 257))'),
-        ('shifts.tz', 'None', '(Right (Pair 123 257))'),
-        ('mul_overflow.tz', 'Unit', 'Left Unit'),
-        ('mul_overflow.tz', 'Unit', 'Right Unit'),
+        ('shifts.tz', 'None', '(Left (Pair 1 257))', 'shift overflow 257, should not exceed 256'),
+        ('shifts.tz', 'None', '(Left (Pair 123 257))', 'shift overflow 257, should not exceed 256'),
+        ('shifts.tz', 'None', '(Right (Pair 1 257))', 'shift overflow 257, should not exceed 256'),
+        ('shifts.tz', 'None', '(Right (Pair 123 257))', 'shift overflow 257, should not exceed 256'),
+        ('mul_overflow.tz', 'Unit', 'Left Unit', 'mutez overflow, got 73 bits, should not exceed 63'),
+        ('mul_overflow.tz', 'Unit', 'Right Unit', 'mutez overflow, got 73 bits, should not exceed 63'),
         # Test PACK/UNPACK and binary format.
         (
             'packunpack.tz',
             'Unit',
             '(Pair (Pair (Pair "toto" {3;7;9;1}) {1;2;3}) '
             + '0x05070707070100000004746f746f020000000800030'
-            + '0070009000102000000060001000200030004)'
+            + '0070009000102000000060001000200030004)',
+            'Unit',
         ),
         # Test signature
         (
             'check_signature.tz',
             f'(Pair "{SIGNATURE}" "abcd")',
-            '"edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav"'
+            '"edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav"',
+            'Unit',
         ),
         # BLS12_381_Fr overflow
         (
             'bls12_381_fr_to_int.tz',
             '0',
-            '0xf7ef66f95c90b2f953eb0555af65f22095d4f54b40ea8c6dcc2014740e8662c16bb8786723'
-        )
+            '0xf7ef66f95c90b2f953eb0555af65f22095d4f54b40ea8c6dcc2014740e8662c16bb8786723',
+            'expected no more than 32 bytes, got 37',
+        ),
+        # Top-level parameter annotations
+        (
+            'create_contract_rootname.tz',
+            'None',
+            'Unit',
+            'top level parameter annotations not supported',
+        ),
+        # CREATE_CONTRACT in views
+        (
+            'view_op_create_contract.tz',
+            'None',
+            'Unit',
+            'CREATE_CONTRACT is not allowed in views',
+        ),
+        # SET_DELEGATE in views
+        (
+            'view_op_set_delegate.tz',
+            'None',
+            'Unit',
+            'SET_DELEGATE is not allowed in views',
+        ),
+        # TRANSFER_TOKENS in views
+        (
+            'view_op_transfer_tokens.tz',
+            'None',
+            'Unit',
+            'TRANSFER_TOKENS is not allowed in views',
+        ),
+        # SELF in views
+        (
+            'view_op_self.tz',
+            'None',
+            'Unit',
+            'SELF is not allowed in views',
+        ),
     ])
-    def test_failed_opcodes(self, filename, storage, parameter):
+    def test_failed_opcodes(self, filename, storage, parameter, error_msg):
         with open(join(dirname(__file__), 'opcodes', filename)) as f:
             script = f.read()
 
@@ -1575,4 +1637,5 @@ class OpcodesTestCase(TestCase):
             storage=michelson_to_micheline(storage),
             script=michelson_to_micheline(script)
         )
-        self.assertIsNotNone(error)
+        self.assertIsInstance(error, MichelsonRuntimeError)
+        self.assertEqual(error.args[-1], error_msg)

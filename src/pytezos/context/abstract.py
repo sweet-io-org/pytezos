@@ -201,6 +201,9 @@ class AbstractContext:
     def get_dummy_address(self) -> str:
         raise NotImplementedError
 
+    def get_dummy_txr_address(self) -> str:
+        raise NotImplementedError
+
     def get_dummy_public_key(self) -> str:
         raise NotImplementedError
 
@@ -223,4 +226,7 @@ class AbstractContext:
         raise NotImplementedError
 
     def get_operations_ttl(self) -> int:
+        raise NotImplementedError
+
+    def get_min_block_time(self) -> int:
         raise NotImplementedError
