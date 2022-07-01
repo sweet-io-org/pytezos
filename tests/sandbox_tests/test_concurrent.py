@@ -1,6 +1,6 @@
-from pytezos.sandbox.node import SandboxedNodeAutoBakeTestCase
 from pytezos import ContractInterface
 from pytezos.operation.result import OperationResult
+from pytezos.sandbox.node import SandboxedNodeAutoBakeTestCase
 
 code = """
 parameter (or (int %decrement) (int %increment));
@@ -10,21 +10,25 @@ code { UNPAIR ; IF_LEFT { SWAP ; SUB } { ADD } ; NIL operation ; PAIR }
 
 
 class ConcurrentTransactionsTestCase(SandboxedNodeAutoBakeTestCase):
-
     def get_contract(self) -> ContractInterface:
         for address in self.client.shell.contracts():
             if address.startswith('KT1'):
                 contract = self.client.contract(address)
                 if 'increment' in contract.entrypoints:
                     return contract
-        assert False
+        raise AssertionError()
 
     def test_1_originate_contract(self) -> None:
         ci = ContractInterface.from_michelson(code)
-        res = self.client.origination(ci.script()).autofill().sign().inject(
-            time_between_blocks=self.TIME_BETWEEN_BLOCKS,
-            min_confirmations=1,
-            block_timeout=5
+        res = (
+            self.client.origination(ci.script())
+            .autofill()
+            .sign()
+            .inject(
+                time_between_blocks=self.TIME_BETWEEN_BLOCKS,
+                min_confirmations=1,
+                block_timeout=5,
+            )
         )
         self.assertEqual(1, len(OperationResult.originated_contracts(res)))
 
@@ -35,7 +39,7 @@ class ConcurrentTransactionsTestCase(SandboxedNodeAutoBakeTestCase):
         opg.sign().inject(
             time_between_blocks=self.TIME_BETWEEN_BLOCKS,
             min_confirmations=1,
-            block_timeout=5
+            block_timeout=5,
         )
         self.assertEqual(45, int(contract.storage()))
 
@@ -58,6 +62,6 @@ class ConcurrentTransactionsTestCase(SandboxedNodeAutoBakeTestCase):
             *txs,
             time_between_blocks=self.TIME_BETWEEN_BLOCKS,
             min_confirmations=1,
-            block_timeout=5
+            block_timeout=5,
         )
         self.assertEqual(1, int(contract.storage() - value_before))
