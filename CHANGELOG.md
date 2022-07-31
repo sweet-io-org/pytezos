@@ -1,11 +1,17 @@
 # Changelog
 
-## [Unreleased](https://github.com/baking-bad/pytezos/compare/3.6.0...master)
+## [3.6.1](https://github.com/baking-bad/pytezos/compare/3.6.0...3.6.1) (2022-08-01)
+
+### Added
+
+* one can supply initial storage when executing a callback view
 
 ### Fixed
 
+* Fixed PLY & -OO mode incompatibility
 * Fixed `pytezos sandbox` command crash.
 * Fixed setting default logging config.
+* Large batches do not hit gas per block exhausted anymore, fee is specified for the first operation only.
 
 ## [3.6.0](https://github.com/baking-bad/pytezos/compare/3.5.1...3.6.0) (2022-06-28)
 
