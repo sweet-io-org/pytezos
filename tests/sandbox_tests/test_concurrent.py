@@ -1,6 +1,6 @@
-from pytezos.sandbox.node import SandboxedNodeAutoBakeTestCase
 from pytezos import ContractInterface
 from pytezos.operation.result import OperationResult
+from pytezos.sandbox.node import SandboxedNodeAutoBakeTestCase
 
 code = """
 parameter (or (int %decrement) (int %increment));
@@ -10,34 +10,38 @@ code { UNPAIR ; IF_LEFT { SWAP ; SUB } { ADD } ; NIL operation ; PAIR }
 
 
 class ConcurrentTransactionsTestCase(SandboxedNodeAutoBakeTestCase):
-
     def get_contract(self) -> ContractInterface:
         for address in self.client.shell.contracts():
             if address.startswith('KT1'):
                 contract = self.client.contract(address)
                 if 'increment' in contract.entrypoints:
                     return contract
-        assert False
+        raise AssertionError()
 
     def test_1_originate_contract(self) -> None:
         ci = ContractInterface.from_michelson(code)
-        res = self.client.origination(ci.script()).autofill().sign().inject(
-            time_between_blocks=self.TIME_BETWEEN_BLOCKS,
-            min_confirmations=1,
-            block_timeout=5
+        res = (
+            self.client.origination(ci.script())
+            .autofill()
+            .sign()
+            .inject(
+                time_between_blocks=self.TIME_BETWEEN_BLOCKS,
+                min_confirmations=1,
+                block_timeout=5,
+            )
         )
         self.assertEqual(1, len(OperationResult.originated_contracts(res)))
 
     def test_2_batch_multiple_calls(self) -> None:
         contract = self.get_contract()
-        txs = [contract.increment(i) for i in range(10)]
+        txs = [contract.increment(i) for i in range(100)]
         opg = self.client.bulk(*txs).autofill()
         opg.sign().inject(
             time_between_blocks=self.TIME_BETWEEN_BLOCKS,
             min_confirmations=1,
-            block_timeout=5
+            block_timeout=5,
         )
-        self.assertEqual(45, int(contract.storage()))
+        self.assertEqual(4950, int(contract.storage()))
 
     def test_3_send_multiple_calls(self) -> None:
         contract = self.get_contract()
@@ -58,6 +62,6 @@ class ConcurrentTransactionsTestCase(SandboxedNodeAutoBakeTestCase):
             *txs,
             time_between_blocks=self.TIME_BETWEEN_BLOCKS,
             min_confirmations=1,
-            block_timeout=5
+            block_timeout=5,
         )
         self.assertEqual(1, int(contract.storage() - value_before))
