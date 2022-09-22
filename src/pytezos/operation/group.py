@@ -376,7 +376,9 @@ class OperationGroup(ContextMixin, ContentMixin):
         if ttl is None:
             ttl = self.context.get_operations_ttl()
 
-        opg = self.autofill(gas_reserve=gas_reserve, burn_reserve=burn_reserve, ttl=ttl, fee_multiplier=fee_multiplier).sign()
+        opg = self.autofill(
+            gas_reserve=gas_reserve, burn_reserve=burn_reserve, ttl=ttl, fee_multiplier=fee_multiplier
+        ).sign()
         res = opg.inject(min_confirmations=min_confirmations, num_blocks_wait=ttl)
         return opg._spawn(opg_hash=res['hash'], opg_result=res)
 
