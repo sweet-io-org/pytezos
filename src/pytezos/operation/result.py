@@ -1,4 +1,5 @@
 import functools
+import math
 import operator
 from typing import Any, Dict, Iterator, List
 
@@ -59,7 +60,7 @@ class OperationResult:
         """
         return sum(
             map(
-                lambda x: int(x.get('consumed_gas', '0')),
+                lambda x: math.ceil(int(x.get('consumed_milligas', '0')) / 1000),
                 OperationResult.iter_results(operation_group),
             ),
         )
