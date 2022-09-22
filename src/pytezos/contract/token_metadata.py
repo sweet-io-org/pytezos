@@ -1,15 +1,20 @@
 import json
-from datetime import datetime, time
-from os.path import dirname, join
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from datetime import time
+from os.path import dirname
+from os.path import join
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 
 import requests
 from attr import dataclass
-from cattrs_extras.converter import Converter
 from jsonschema import validate as jsonschema_validate  # type: ignore
 
 from pytezos.context.impl import ExecutionContext
 from pytezos.context.mixin import ContextMixin
+from pytezos.contract import converter
 
 with open(join(dirname(__file__), 'token_metadata-schema.json')) as file:
     token_metadata_schema = json.load(file)
@@ -102,7 +107,11 @@ class ContractTokenMetadata(ContextMixin):
         jsonschema_validate(instance=metadata_json, schema=token_metadata_schema)
 
     @classmethod
-    def from_json(cls, token_metadata_json: Dict[str, Any], context: Optional[ExecutionContext] = None) -> 'ContractTokenMetadata':
+    def from_json(
+        cls,
+        token_metadata_json: Dict[str, Any],
+        context: Optional[ExecutionContext] = None,
+    ) -> 'ContractTokenMetadata':
         """Convert token metadata from JSON object"""
 
         for key, value in token_metadata_json.items():
@@ -112,7 +121,7 @@ class ContractTokenMetadata(ContextMixin):
             token_metadata_json['decimals'] = int(token_metadata_json['decimals'])
 
         cls.validate_token_metadata_json(token_metadata_json)
-        res = Converter().structure(token_metadata_json, ContractTokenMetadata)
+        res = converter.structure(token_metadata_json, ContractTokenMetadata)
         res.context = context if context else ExecutionContext()
         res.raw = token_metadata_json
         return res

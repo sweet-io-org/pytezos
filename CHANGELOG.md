@@ -1,8 +1,71 @@
 # Changelog
 
-## 3.4.2 - 2022-03-26
+## [3.7.1](https://github.com/baking-bad/pytezos/compare/3.7.0...3.7.1) (2022-09-19)
 
 ### Fixed
+
+* Fixed lazy storage diff parsing in `OperationResult` helper class
+
+## [3.7.0](https://github.com/baking-bad/pytezos/compare/3.6.1...3.7.0) (2022-09-17)
+
+### Added
+
+* `EMIT` instruction support added
+
+### Changed
+
+* `consumed_milligas` is used instead of deprecated `consumed_gas` field
+* `ghostnet` is now a default network in pytezos client (as it is permanent)
+
+## [3.6.1](https://github.com/baking-bad/pytezos/compare/3.6.0...3.6.1) (2022-08-04)
+
+### Added
+
+* one can supply initial storage when executing a callback view
+
+### Fixed
+
+* Fixed PLY & -OO mode incompatibility
+* Fixed `pytezos sandbox` command crash.
+* Fixed setting default logging config.
+* Large batches do not hit gas per block exhausted anymore, fee is specified for the first operation only.
+
+## [3.6.0](https://github.com/baking-bad/pytezos/compare/3.5.1...3.6.0) (2022-06-28)
+
+### Added
+
+* Added Jakarta primitives support: `tx_rollup_l2_address`, `MIN_BLOCK_TIME`, `sapling_transaction_deprecated`.
+
+### Fixed
+
+* Fixed `gas_exhausted.block` error when sending multiple operations in a single batch.
+
+### Deprecated
+
+* Protocols older than 13.0 (Jakatra) are no longer supported.
+
+## [3.5.1](https://github.com/baking-bad/pytezos/compare/3.5.0...3.5.1) (2022-05-18)
+
+### Fixed
+
+* Unforging for `pair` with 3 args and annots was working incorrectly (@konchunas)
+
+## [3.5.0](https://github.com/baking-bad/pytezos/compare/3.4.2...3.5.0) (2022-04-29)
+
+### Fixed
+
+* Wait helper edge case: operations can be both included in chain and present in mempool
+* Batch operation build was accompanied by many useless RPC requests
+* `minimal_block_delay` constant might be absent, defaults to 0 (by @jpic)
+
+### Changed
+
+* Minimum Python version is now 3.8, Python 3.10 support is added
+* Blocks observer now handles reorgs and waits for N levels instead of N blocks
+
+## 3.4.2 - 2022-03-26
+
+### Fixed`
 
 * time_between_blocks no longer exists, minimum_block_delay used instead
 * sandbox tests -> re-create node container per each case (cannot rollback in Tenderbake)
