@@ -1,10 +1,11 @@
 # Changelog
 
-## [3.7.1](https://github.com/baking-bad/pytezos/compare/3.7.0...3.7.1) (2022-09-19)
+## [3.7.1](https://github.com/baking-bad/pytezos/compare/3.7.0...3.7.1) (2022-10-15)
 
 ### Fixed
 
 * Fixed lazy storage diff parsing in `OperationResult` helper class
+* `UNPAIR n` is now actually counting leaves (by @konchunas)
 
 ## [3.7.0](https://github.com/baking-bad/pytezos/compare/3.6.1...3.7.0) (2022-09-17)
 
