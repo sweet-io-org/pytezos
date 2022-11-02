@@ -16,6 +16,17 @@ help:              ## Show this help (default)
 all:               ## Run a whole CI pipeline: lint, run tests, build docs
 	make install lint test docs
 
+install-deps:      ## Install binary dependencies
+ifneq (,$(findstring linux-gnu,$(OSTYPE)))
+	sudo apt install libsodium-dev libsecp256k1-dev libgmp-dev pkg-config
+else ifneq (,$(findstring darwin,$(OSTYPE)))
+	brew tap cuber/homebrew-libsecp256k1
+	brew install libsodium libsecp256k1 gmp pkg-config
+else
+	echo "Unsupported platform $(OSTYPE)"
+	exit 1
+endif
+
 install:           ## Install project dependencies
 	poetry install \
 	`if [ "${DEV}" = "0" ]; then echo "--no-dev"; fi`
@@ -26,6 +37,12 @@ lint:              ## Lint with all tools
 test:              ## Run test suite
 	# FIXME: https://github.com/pytest-dev/pytest-xdist/issues/385#issuecomment-1177147322
 	poetry run sh -c "pytest --cov-report=term-missing --cov=pytezos --cov=michelson_kernel --cov-report=xml -n auto -s -v tests/contract_tests tests/integration_tests tests/unit_tests && pytest -xv tests/sandbox_tests"
+
+test-ci:
+	poetry run sh -c "pytest -sv tests/contract_tests tests/integration_tests tests/unit_tests"
+ifneq (,$(findstring linux-gnu,$(OSTYPE)))
+	poetry run sh -c "pytest -sv tests/sandbox_tests"
+endif
 
 docs:              ## Build docs
 	make kernel-docs rpc-docs
