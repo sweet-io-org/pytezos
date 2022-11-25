@@ -242,7 +242,7 @@ class OperationGroup(ContextMixin, ContentMixin):
         fee: Optional[int] = None,
         gas_limit: Optional[int] = None,
         storage_limit: Optional[int] = None,
-        fee_multiplier: Optional[float] = None,
+        fee_multiplier: Optional[Union[float, int]] = 1,
         **kwargs,
     ) -> 'OperationGroup':
         """Fill the gaps and then simulate the operation in order to calculate fee, gas/storage limits.
@@ -298,8 +298,10 @@ class OperationGroup(ContextMixin, ContentMixin):
                     storage_limit=str(storage_limit_new),
                     fee='0',
                 )
-                fee_acc += int(calculate_fee(content, gas_limit_new, extra_size=1 + extra_size // num_contents)
-                               * fee_multiplier)
+                extra_fee = calculate_fee(content, gas_limit_new, extra_size=1 + extra_size // num_contents)
+                if fee_multiplier is not None:
+                    extra_fee = int(extra_fee * fee_multiplier)
+                fee_acc += extra_fee
 
             content.pop('metadata')
             logger.debug("autofilled transaction content: %s" % content)
