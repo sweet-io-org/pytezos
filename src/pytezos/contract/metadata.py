@@ -1,15 +1,21 @@
 import json
 import re
-from os.path import dirname, join
-from typing import Any, Dict, List, Optional, Union
+from contextlib import suppress
+from os.path import dirname
+from os.path import join
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
 
-import requests  # type: ignore
+import requests
 from attr import dataclass
-from cattrs_extras.converter import Converter, suppress  # type: ignore
 from jsonschema import validate as jsonschema_validate  # type: ignore
 
 from pytezos.context.impl import ExecutionContext
 from pytezos.context.mixin import ContextMixin
+from pytezos.contract import converter
 from pytezos.contract.view import ContractView
 
 
@@ -104,7 +110,8 @@ class ContractMetadata(ContextMixin):
         if self.views:
             for view in self.views:
                 michelson_storage_impl = next(
-                    (impl for impl in view.implementations if isinstance(impl, MichelsonStorageViewImplementation)), None
+                    (impl for impl in view.implementations if isinstance(impl, MichelsonStorageViewImplementation)),
+                    None,
                 )
                 if michelson_storage_impl is not None:
                     name = _to_camelcase(view.name)
@@ -163,7 +170,7 @@ class ContractMetadata(ContextMixin):
         """Convert metadata from JSON object"""
         metadata_json = cls.fix_metadata_json(metadata_json)
         cls.validate_metadata_json(metadata_json)
-        res = Converter().structure(metadata_json, ContractMetadata)
+        res = converter.structure(metadata_json, ContractMetadata)
         res.context = context if context else ExecutionContext()
         res.raw = metadata_json
         return res
